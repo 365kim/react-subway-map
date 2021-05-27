@@ -9,15 +9,15 @@ import store from './redux/store';
 import { GlobalStyle } from './style';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <SnackbarProvider maxSnack={3}>
+  <SnackbarProvider maxSnack={3}>
+    <React.StrictMode>
       <Provider store={store}>
         <Router>
           <App />
         </Router>
       </Provider>
       <GlobalStyle />
-    </SnackbarProvider>
-  </React.StrictMode>,
+    </React.StrictMode>
+  </SnackbarProvider>,
   document.getElementById('root'),
 );
