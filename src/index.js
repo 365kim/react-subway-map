@@ -10,14 +10,12 @@ import { GlobalStyle } from './style';
 
 ReactDOM.render(
   <SnackbarProvider maxSnack={3}>
-    <React.StrictMode>
-      <Provider store={store}>
-        <Router>
-          <App />
-        </Router>
-      </Provider>
-      <GlobalStyle />
-    </React.StrictMode>
+    <Provider store={store}>
+      <Router>
+        <App />
+      </Router>
+    </Provider>
+    <GlobalStyle />
   </SnackbarProvider>,
   document.getElementById('root'),
 );
