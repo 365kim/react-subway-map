@@ -15,18 +15,18 @@ const getLines = createAsyncThunk('line/getLines', async ({ endpoint, accessToke
 
     if (response.status === 200) {
       return { lines: body };
-    } else {
-      throw new Error(body);
     }
+
+    throw new Error(body.message);
   } catch (e) {
-    console.error(e.response.data);
-    thunkAPI.rejectWithValue(e.response.data);
+    console.error(e);
+    return thunkAPI.rejectWithValue(e);
   }
 });
 
 const addLine = createAsyncThunk(
   'line/addLine',
-  async ({ endpoint, accessToken, name, upStation, downStation, distance, color }, thunkAPI) => {
+  async ({ endpoint, accessToken, name, upStationId, downStationId, distance, color }, thunkAPI) => {
     try {
       const response = await fetch(`${endpoint}/lines`, {
         method: 'POST',
@@ -37,8 +37,8 @@ const addLine = createAsyncThunk(
         },
         body: JSON.stringify({
           name,
-          upStation,
-          downStation,
+          upStationId,
+          downStationId,
           distance,
           color,
         }),
@@ -47,13 +47,20 @@ const addLine = createAsyncThunk(
       const body = await response.json();
 
       if (response.status === 201) {
-        return body;
-      } else {
-        throw new Error(body);
+        return {
+          id: body.id,
+          name,
+          startStation: body.stations[0],
+          endStation: body.stations[1],
+          distance,
+          color,
+        };
       }
+
+      throw new Error(body.message);
     } catch (e) {
-      console.error(e.response.data);
-      thunkAPI.rejectWithValue(e.response.data);
+      console.error(e);
+      return thunkAPI.rejectWithValue(e);
     }
   },
 );
@@ -67,21 +74,41 @@ const removeLine = createAsyncThunk('line/removeLine', async ({ endpoint, access
 
     if (response.status === 204) {
       return { id };
-    } else {
-      throw new Error('삭제를 실패하였습니다.');
     }
+
+    const { message } = await response.json();
+
+    throw new Error(message);
   } catch (e) {
     console.error(e);
-    thunkAPI.rejectWithValue(e);
+    return thunkAPI.rejectWithValue(e);
   }
 });
 
 const lineSlice = createSlice({
   name: 'line',
-  initialState: { lines: [], isLoading: false, isAddSuccess: false },
+  initialState: {
+    lines: [],
+    isLoading: false,
+    isAddSuccess: false,
+    isAddFail: false,
+    isDeleteSuccess: false,
+    isDeleteFail: false,
+  },
   reducers: {
-    clearAddSuccess: (state) => {
+    clearLineProgress: (state) => {
       state.isAddSuccess = false;
+      state.isAddFail = false;
+      state.isDeleteSuccess = false;
+      state.isDeleteFail = false;
+    },
+    clearLine: (state) => {
+      state.lines = [];
+      state.isLoading = false;
+      state.isAddSuccess = false;
+      state.isAddFail = false;
+      state.isDeleteSuccess = false;
+      state.isDeleteFail = false;
     },
   },
   extraReducers: {
@@ -97,32 +124,35 @@ const lineSlice = createSlice({
       state.isLoading = false;
     },
     [addLine.fulfilled]: (state, action) => {
-      const { id, name } = action.payload;
+      const line = action.payload;
 
-      state.lines = [{ id, name }, ...state.lines];
+      state.lines = [line, ...state.lines];
       state.isAddSuccess = true;
     },
     [addLine.pending]: (state) => {
       state.isLoading = true;
     },
     [addLine.rejected]: (state) => {
+      state.isAddFail = true;
       state.isLoading = false;
     },
     [removeLine.fulfilled]: (state, action) => {
       const { id } = action.payload;
 
       state.lines = state.lines.filter((line) => line.id !== id);
+      state.isDeleteSuccess = true;
     },
     [removeLine.pending]: (state) => {
       state.isLoading = true;
     },
     [removeLine.rejected]: (state) => {
+      state.isDeleteFail = true;
       state.isLoading = false;
     },
   },
 });
 
 export { getLines, addLine, removeLine };
-export const { clearAddSuccess } = lineSlice.actions;
+export const { clearLineProgress, clearLine } = lineSlice.actions;
 
 export default lineSlice.reducer;

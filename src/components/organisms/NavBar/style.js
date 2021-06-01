@@ -26,16 +26,17 @@ export const Title = styled.div`
   align-items: flex-start;
   padding-left: 0.3rem;
   color: ${COLOR.TEXT.NAVBAR};
-`;
-
-export const MainTitle = styled.h1`
-  font-size: 1.6rem;
   font-family: 'BM_HANNA';
 `;
 
+export const MainTitle = styled.h1`
+  font-size: 1.3rem;
+  font-weight: 200;
+`;
+
 export const SubTitle = styled.span`
-  font-size: 0.9rem;
-  margin-bottom: 0.2rem;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
 `;
 
 export const Menu = styled.div`
@@ -73,7 +74,18 @@ export const MenuItem = styled.li`
     }
   }
 
-  &:hover ::after {
+  & > a::after {
+    content: '';
+    position: absolute;
+    left: 0.1rem;
+    bottom: 0;
+    width: 100%;
+    height: 0.3rem;
+
+    background-color: transparent;
+  }
+
+  &:hover > a::after {
     @keyframes lining {
       0% {
         width: 0%;
@@ -82,15 +94,11 @@ export const MenuItem = styled.li`
         width: 100%;
       }
     }
-
-    content: '';
-    position: absolute;
-    left: 0.1rem;
-    bottom: 0;
-    width: 100%;
-    height: 0.3rem;
-
     background-color: ${COLOR.TEXT.NAVBAR};
     animation: lining 0.1s ease-out;
+  }
+
+  & > a.selected::after {
+    background-color: ${COLOR.TEXT.NAVBAR};
   }
 `;

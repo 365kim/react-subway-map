@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useHistory } from 'react-router-dom';
 import { PropTypes } from 'prop-types';
-import { useCookies } from 'react-cookie';
 
-import { logout } from '../../../redux/userSlice';
+import { useCookie, useLogin } from '../../../hooks';
+import { clearStation } from '../../../redux/stationSlice';
+import { clearLine } from '../../../redux/lineSlice';
+import { clearMap } from '../../../redux/mapSlice';
 import { NavBar, ServerSelect } from '../..';
 import { Header, ServerSelectButton, Main } from './style';
-import { ROUTE, SERVER_LIST, SERVER_ID } from '../../../constants';
+import { SERVER_LIST } from '../../../constants';
 
 export const Page = (props) => {
   const { serverId, setServerId, children, ...rest } = props;
 
-  const [isServerSelectOpen, setIsServerSelectOpen] = useState(!serverId);
-  const history = useHistory();
   const dispatch = useDispatch();
-  const [cookies, setCookie] = useCookies([SERVER_ID]);
+
+  const [isServerSelectOpen, setIsServerSelectOpen] = useState(!serverId);
+  const { isLogin, requestLogout, removeToken } = useLogin();
+  const { setServerIdInCookie } = useCookie();
 
   const handleServerSubmit = (e) => {
     e.preventDefault();
@@ -28,10 +30,16 @@ export const Page = (props) => {
       return;
     }
     setServerId(selectedId);
-    setCookie(SERVER_ID, selectedId);
+    setServerIdInCookie(selectedId);
     setIsServerSelectOpen(false);
-    dispatch(logout());
-    history.push(ROUTE.LOGIN);
+
+    if (isLogin) {
+      requestLogout();
+    }
+    removeToken();
+    dispatch(clearLine());
+    dispatch(clearStation());
+    dispatch(clearMap());
   };
 
   const handleServerSelectButtonClick = () => {

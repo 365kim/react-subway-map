@@ -1,53 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PropTypes } from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
-import { useCookies } from 'react-cookie';
 
-import { getStations, addStation, clearAddSuccess, removeStation } from '../../redux/stationSlice';
+import { useStation } from '../../hooks';
 import { ButtonSquare, IconSubway, Input, Section, StationListItem } from '../../components';
 import { Form, List } from './style';
-import { STATION, ACCESS_TOKEN } from '../../constants';
+import { STATION } from '../../constants';
 
-export const StationPage = (props) => {
-  const { endpoint } = props;
-
-  const dispatch = useDispatch();
-  const { stations, isAddSuccess } = useSelector((store) => store.station);
+export const StationPage = () => {
+  const {
+    stations,
+    requestGetStation,
+    isAddSuccess,
+    isAddFail,
+    requestAddStation,
+    notifyAddResult,
+    isDeleteSuccess,
+    isDeleteFail,
+    requestDeleteStation,
+    notifyDeleteResult,
+  } = useStation();
   const [inputStatus, setInputStatus] = useState({ message: '', isValid: false });
   const ref = useRef();
-  const [cookies] = useCookies([ACCESS_TOKEN]);
-  const accessToken = cookies[ACCESS_TOKEN];
 
   const handleStationNameInputChange = (e) => {
-    const stationName = e.target.value;
-
-    setInputStatus(getInputStatus(stationName));
+    setInputStatus(getInputStatus(e.target.value));
   };
 
   const handleAddStation = (e) => {
     e.preventDefault();
-
-    const stationName = e.target.name.value;
-
-    dispatch(addStation({ endpoint, accessToken, name: stationName }));
+    requestAddStation(e.target.name.value);
   };
 
-  const handleDeleteStation = (e, stationId) => {
-    dispatch(removeStation({ endpoint, accessToken, id: stationId }));
+  const handleDeleteStation = (_, stationId) => {
+    requestDeleteStation(stationId);
   };
 
   /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    dispatch(getStations({ endpoint, accessToken }));
+    requestGetStation();
   }, []);
 
   useEffect(() => {
+    notifyAddResult();
+
     if (isAddSuccess) {
       ref.current.focus();
       ref.current.value = '';
-      dispatch(clearAddSuccess());
     }
-  }, [isAddSuccess]);
+  }, [isAddSuccess, isAddFail]);
+
+  useEffect(() => {
+    notifyDeleteResult();
+  }, [isDeleteSuccess, isDeleteFail]);
 
   return (
     <Section heading="지하철 역 관리">
@@ -75,10 +78,6 @@ export const StationPage = (props) => {
       </List>
     </Section>
   );
-};
-
-StationPage.propTypes = {
-  endpoint: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
 };
 
 function getInputStatus(name) {

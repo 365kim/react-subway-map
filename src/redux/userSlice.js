@@ -18,12 +18,12 @@ const login = createAsyncThunk('user/login', async ({ endpoint, email, password 
 
     if (response.status === 200) {
       return { ...body, email };
-    } else {
-      throw new Error(body);
     }
+
+    throw new Error(body.message);
   } catch (e) {
-    console.error(e.response.data);
-    thunkAPI.rejectWithValue(e.response.data);
+    console.error(e);
+    return thunkAPI.rejectWithValue(e);
   }
 });
 
@@ -42,12 +42,12 @@ const loginByToken = createAsyncThunk('user/loginByToken', async ({ endpoint, ac
 
     if (response.status === 200) {
       return { email: body.email, accessToken };
-    } else {
-      throw new Error(body);
     }
+
+    throw new Error(body.message);
   } catch (e) {
-    console.error(e.response.data);
-    thunkAPI.rejectWithValue(e.response.data);
+    console.error(e);
+    return thunkAPI.rejectWithValue(e);
   }
 });
 
@@ -57,7 +57,7 @@ const userSlice = createSlice({
     email: null,
     accessToken: null,
     isLogin: false,
-    isLoginFailed: false,
+    isLoginFail: false,
     isLoading: false,
   },
   reducers: {
@@ -65,9 +65,13 @@ const userSlice = createSlice({
       state.email = null;
       state.accessToken = null;
       state.isLogin = false;
+      state.isLogout = true;
     },
-    clearLoginFailed: (state) => {
-      state.isLoginFailed = false;
+    clearLoginFail: (state) => {
+      state.isLoginFail = false;
+    },
+    clearLogout: (state) => {
+      state.isLogout = false;
     },
   },
   extraReducers: {
@@ -83,7 +87,7 @@ const userSlice = createSlice({
       state.isLoading = true;
     },
     [login.rejected]: (state) => {
-      state.isLoginFailed = true;
+      state.isLoginFail = true;
       state.isLoading = false;
     },
     [loginByToken.fulfilled]: (state, action) => {
@@ -98,13 +102,13 @@ const userSlice = createSlice({
       state.isLoading = true;
     },
     [loginByToken.rejected]: (state) => {
-      state.isLoginFailed = true;
+      state.isLoginFail = true;
       state.isLoading = false;
     },
   },
 });
 
 export { login, loginByToken };
-export const { logout, clearLoginFailed } = userSlice.actions;
+export const { logout, clearLoginFail, clearLogout } = userSlice.actions;
 
 export default userSlice.reducer;

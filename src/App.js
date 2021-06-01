@@ -1,38 +1,34 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import { Switch, Route, useHistory } from 'react-router-dom';
+import { Switch, Route } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { useCookies } from 'react-cookie';
 
+import { useCookie, useRouter } from './hooks';
 import { loginByToken } from './redux/userSlice';
 import { Page } from './components';
 import { LoginPage, SignUpPage, StationPage, LinePage, SectionPage } from './pages';
-import { ROUTE, SERVER_LIST, SERVER_ID, ACCESS_TOKEN } from './constants';
+import { ROUTE, SERVER_LIST } from './constants';
 
 function App() {
   const dispatch = useDispatch();
-  const history = useHistory();
-
-  const [cookies, setCookie] = useCookies([SERVER_ID, ACCESS_TOKEN]);
-
-  const [serverId, setServerId] = useState(cookies[SERVER_ID] || '');
+  const { goToLogin } = useRouter();
+  const { accessTokenInCookie, serverIdInCookie, setServerIdInCookie } = useCookie();
+  const [serverId, setServerId] = useState(serverIdInCookie || '');
   const endpoint = SERVER_LIST[serverId]?.endpoint || '';
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
-    if (!cookies[SERVER_ID]) {
+    if (!serverIdInCookie) {
       return;
     }
-
-    if (!cookies[ACCESS_TOKEN]) {
-      history.push(ROUTE.LOGIN);
+    if (!accessTokenInCookie) {
+      goToLogin();
       return;
     }
-
-    dispatch(loginByToken({ endpoint, accessToken: cookies[ACCESS_TOKEN] }));
+    dispatch(loginByToken({ endpoint, accessToken: accessTokenInCookie }));
 
     return () => {
       if (serverId) {
-        setCookie(SERVER_ID, serverId);
+        setServerIdInCookie(serverId);
       }
     };
   }, []);
@@ -41,19 +37,19 @@ function App() {
     <Page serverId={serverId} setServerId={setServerId}>
       <Switch>
         <Route exact path={ROUTE.LOGIN}>
-          <LoginPage endpoint={endpoint} />
+          <LoginPage />
         </Route>
         <Route exact path={ROUTE.SING_UP}>
-          <SignUpPage endpoint={endpoint} />
+          <SignUpPage />
         </Route>
         <Route exact path={ROUTE.STATION}>
-          <StationPage endpoint={endpoint} />
+          <StationPage />
         </Route>
         <Route exact path={ROUTE.LINE}>
-          <LinePage endpoint={endpoint} />
+          <LinePage />
         </Route>
-        <Route exact path={ROUTE.Section}>
-          <SectionPage endpoint={endpoint} />
+        <Route exact path={ROUTE.SECTION}>
+          <SectionPage />
         </Route>
       </Switch>
     </Page>
